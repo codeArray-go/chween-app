@@ -1,3 +1,4 @@
+import 'package:chween_app/manager/socket_manager.dart';
 import 'package:chween_app/provider/auth_provider.dart';
 import 'package:chween_app/services/chat_service.dart';
 import 'package:chween_app/services/socket_service.dart';
@@ -10,10 +11,10 @@ class ChatProviderState {
   final List<dynamic> chats;
   final String? error;
   final int? messageSelected;
-  final List<dynamic>? notificationCount;
+  final List<dynamic> notificationCount;
   final List<dynamic> onlineUsers;
 
-  ChatProviderState({this.selectedUser, this.chats = const [], this.error, this.isLoading = false, this.messageSelected, this.notificationCount, this.onlineUsers = const []});
+  ChatProviderState({this.selectedUser, this.chats = const [], this.error, this.isLoading = false, this.messageSelected, this.notificationCount = const [], this.onlineUsers = const []});
 
   ChatProviderState copyWith({
     bool? isLoading,
@@ -117,7 +118,7 @@ class ChatNotifier extends StateNotifier<ChatProviderState> {
     }
   }
 
-  // **************************************************************************************************
+  // -------------------- SOCKET RELATED FUNCTIONS --------------------
   // GET ONLINE USERS
   void getOnlineUsers(List<dynamic> users) {
     state = state.copyWith(onlineUsers: users);
@@ -126,11 +127,62 @@ class ChatNotifier extends StateNotifier<ChatProviderState> {
   // GET NEW MESSAGES
   void liveMessage(dynamic newMessage) {
     final Map<String, dynamic> message = newMessage is List ? newMessage.first : newMessage;
-    print(message);
     state = state.copyWith(chats: [...state.chats, message]);
   }
 
-  // ***************************************************************************************************
+  // UPDATE MESSAGE SEEN STATUS
+  void setChats(int id) {
+    final message = state.chats;
+
+    final updatedChats = message.map((msg) {
+      final rid = int.parse(msg["receiver_id"]);
+
+      if (rid == id && (msg["is_seen"] == false)) {
+        return {...msg, "is_seen": true};
+      }
+      return msg;
+    }).toList();
+
+    state = state.copyWith(chats: updatedChats);
+  }
+
+  // UPDATE DELETED MESSAGE
+  void chatAfterDelete(int messageId) {
+    final message = state.chats;
+
+    final updatedMessage = message.where((msg) => int.parse(msg["id"]) != messageId).toList();
+    state = state.copyWith(chats: updatedMessage);
+  }
+
+  // EMIT SEEN STATUS
+  void emitSeenStatus() {
+    final authId = ref.read(authProvider).user?['id'];
+    final id = state.selectedUser?['id'];
+
+    final data = {"messagesender_id": id, "myId": authId};
+    ref.read(socketManagerProvider).emmitSeenStatus(data);
+  }
+
+  // GET UNREAD MESSAGE COUNT AFTER ONE USER MESSAGES ARE SEEN
+  void notSeenMessage(int sender, String count) {
+    bool found = false;
+
+    final updatedNotification = state.notificationCount.map((elem) {
+      if (sender == int.parse(elem['sender_id'])) {
+        found = true;
+        return {...elem, "unread_count": count};
+      }
+      return elem;
+    }).toList();
+
+    if (!found) {
+      updatedNotification.add({"sender_id": sender.toString(), "unread_count": count});
+    }
+
+    state = state.copyWith(notificationCount: updatedNotification);
+  }
+
+  // --------------------------------------------------------------------
 
   // SELECT MESSAGE TO DELETE
   void messageIdToDelete(int id) {
@@ -146,6 +198,10 @@ class ChatNotifier extends StateNotifier<ChatProviderState> {
   Future<void> deleteMessage(int id) async {
     try {
       await chatService.deleteMessage(id);
+      final message = state.chats;
+
+      final updatedMessage = message.where((msg) => int.parse(msg["id"]) != id).toList();
+      state = state.copyWith(chats: updatedMessage);
     } catch (error) {
       throw Exception("Error while deleting message: $error");
     }

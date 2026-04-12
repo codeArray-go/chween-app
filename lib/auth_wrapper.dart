@@ -42,14 +42,9 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
       }
     });
 
-    if (auth.isLoading) {
-      return const SideBarSkeleton();
-    }
+    if (auth.isLoading) return const SideBarSkeleton();
 
-    if (auth.user != null) {
-      return SideBarPage();
-    } else {
-      return LoginPage();
-    }
+    if (auth.user != null) return SideBarPage();
+    return LoginPage();
   }
 }

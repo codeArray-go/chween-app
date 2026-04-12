@@ -1,18 +1,44 @@
+import 'package:chween_app/manager/socket_manager.dart';
 import 'package:chween_app/provider/auth_provider.dart';
 import 'package:chween_app/provider/chat_provider.dart';
 import 'package:chween_app/widgetComponents/chatSection/chat_input_box.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 
-class Chats extends ConsumerWidget {
+class Chats extends HookConsumerWidget {
   const Chats({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authUserId = (ref.watch(authProvider)).user?['id'];
+    useEffect(() {
+      ref.read(chatProvider.notifier).emitSeenStatus();
+
+      final manager = ref.read(socketManagerProvider);
+      manager.subscribeToChat();
+
+      return () {
+        manager.unSubscribeToChat();
+      };
+    }, []);
+
+    ref.listen(chatProvider.select((state) => state.chats), (previous, next) {
+      if (next.length > ((previous ?? []).length)) {
+        final lastMessage = next.last;
+
+        if (lastMessage['sender_id'] != ref.watch(chatProvider).selectedUser?['id']) {
+          ref.read(chatProvider.notifier).emitSeenStatus();
+        }
+      }
+    });
+
+    final authUserId = ref.watch(authProvider).user?['id'];
     final chatsProvider = ref.watch(chatProvider);
     final chatsNotifier = ref.read(chatProvider.notifier);
+
+    final userMessages = chatsProvider.chats.where((m) => m["sender_id"] == authUserId);
+    final lastUserMsgId = userMessages.isNotEmpty ? userMessages.last['id'].toString() : null;
 
     return Container(
       color: const Color(0xFF171717),
@@ -26,70 +52,124 @@ class Chats extends ConsumerWidget {
                 final chat = chatsProvider.chats[index];
                 final isSender = chat['sender_id'] == authUserId;
 
-                final rawTime = chat['created_at'] as String;
-                final messageCreatedTime = DateFormat('h:mm a').format(DateTime.parse(rawTime).toLocal());
+                String messageCreatedTime = "0:00";
+                try {
+                  final rawTime = chat['created_at'] as String;
+                  messageCreatedTime = DateFormat('h:mm a').format(DateTime.parse(rawTime).toLocal());
+                } catch (e) {
+                  debugPrint("Time parse error: $e");
+                }
+
+                final msgId = chat['id'].toString();
+
                 return GestureDetector(
-                  onLongPress: () {
-                    chatsNotifier.messageIdToDelete(int.parse(chat['id']));
-                  },
+                  onLongPress: () => chatsNotifier.messageIdToDelete(int.parse(msgId)),
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 3),
-                    padding: EdgeInsets.symmetric(horizontal: 13),
-                    decoration: BoxDecoration(color: chatsProvider.messageSelected == int.parse(chat['id']) ? const Color.fromRGBO(255, 255, 255, 0.07) : Color.fromRGBO(0, 0, 0, 0)),
-                    child: _chatBubble(message: chat['text'] as String, isSender: isSender, imgUrl: chat['image'] as String?, time: messageCreatedTime),
+                    padding: const EdgeInsets.symmetric(horizontal: 13),
+                    decoration: BoxDecoration(color: chatsProvider.messageSelected == int.parse(msgId) ? const Color.fromRGBO(255, 255, 255, 0.07) : Colors.transparent),
+                    child: _chatBubble(
+                      msgSeen: chat['is_seen'] == true,
+                      msgId: msgId,
+                      message: (chat['text'] ?? "") as String,
+                      isSender: isSender,
+                      imgUrl: chat['image'] as String?,
+                      time: messageCreatedTime,
+                      lastMessageSenderId: lastUserMsgId ?? "",
+                      isOptimisticMessage: chat['isOptimisticMessage'] == true,
+                    ),
                   ),
                 );
               },
             ),
           ),
-          ChatInputBox(),
+          const ChatInputBox(),
         ],
       ),
     );
   }
 }
 
-Widget _chatBubble({required String message, required bool isSender, required String? imgUrl, required String time}) {
-  final borderRadiusCircular = const Radius.circular(10);
+Widget _chatBubble({
+  required bool msgSeen,
+  required String msgId,
+  required String message,
+  required bool isSender,
+  required String? imgUrl,
+  required String time,
+  required String lastMessageSenderId,
+  required bool isOptimisticMessage,
+}) {
+  const borderRadiusCircular = Radius.circular(10);
+  final isImage = imgUrl != null && imgUrl.isNotEmpty;
 
   return Align(
     alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      constraints: const BoxConstraints(maxWidth: 280),
-      decoration: BoxDecoration(
-        color: isSender ? const Color(0xFF1C2B4A) : const Color(0xFF333333),
-        borderRadius: BorderRadius.only(
-          topLeft: borderRadiusCircular,
-          topRight: borderRadiusCircular,
-          bottomLeft: isSender ? borderRadiusCircular : const Radius.circular(0),
-          bottomRight: isSender ? const Radius.circular(0) : borderRadiusCircular,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (imgUrl != null && imgUrl.isNotEmpty)
-                  Padding(
-                    padding: EdgeInsets.only(bottom: message.isNotEmpty ? 8 : 0),
-                    child: ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.network(imgUrl)),
-                  ),
-                if (message.isNotEmpty) Text(message, style: const TextStyle(color: Colors.white, fontSize: 14)),
-              ],
+    child: Column(
+      crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isOptimisticMessage
+                ? 20
+                : isImage
+                ? 6
+                : 8,
+            vertical: 6,
+          ),
+          constraints: const BoxConstraints(maxWidth: 280),
+          decoration: BoxDecoration(
+            color: isSender ? const Color(0xFF1C2B4A) : const Color(0xFF333333),
+            borderRadius: BorderRadius.only(
+              topLeft: borderRadiusCircular,
+              topRight: borderRadiusCircular,
+              bottomLeft: isSender ? borderRadiusCircular : Radius.zero,
+              bottomRight: isSender ? Radius.zero : borderRadiusCircular,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: Text(time, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isImage) ...[
+                      ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.network(imgUrl)),
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(time, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                      ),
+                    ],
+                    if (message.isNotEmpty) Text(message, style: const TextStyle(color: Colors.white, fontSize: 14)),
+                  ],
+                ),
+              ),
+              if (!isImage)
+                Padding(
+                  padding: EdgeInsets.only(left: 8),
+                  child: Text(time, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                ),
+            ],
           ),
-        ],
-      ),
+        ),
+
+        if (lastMessageSenderId == msgId)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, right: 4, left: 4),
+            child: Text(
+              msgSeen
+                  ? "seen"
+                  : isOptimisticMessage
+                  ? "sending..."
+                  : "sent",
+              style: const TextStyle(color: Colors.white54, fontSize: 13),
+            ),
+          ),
+      ],
     ),
   );
 }

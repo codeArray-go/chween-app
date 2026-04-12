@@ -29,14 +29,58 @@ class SocketManager {
   }
 
   void _registerEvents() {
+    final socket = socketService.socket;
+
     final chatsProvider = ref.read(chatProvider.notifier);
-    socketService.socket?.off("getOnlineUsers");
-    socketService.socket?.on("getOnlineUsers", (data) {
+
+    socket?.off("getOnlineUsers");
+    socket?.off("unreadCount");
+
+    socket?.on("getOnlineUsers", (data) {
       chatsProvider.getOnlineUsers(data);
     });
 
-    socketService.socket!.on("newMessage", (message) {
+    socket?.on("unreadCount", (data) {
+      chatsProvider.notSeenMessage(int.parse(data['sender']), data['count']);
+    });
+  }
+
+  void subscribeToChat() {
+    final socket = socketService.socket;
+    final chatsProvider = ref.read(chatProvider.notifier);
+
+    socket?.off("messagesSeenByPeer");
+    socket?.off("newMessage");
+    socket?.off("unreadCountUpdateAfterSeen");
+    socket?.off("DeletedMsgId");
+
+    socket?.on("newMessage", (message) {
       chatsProvider.liveMessage(message);
     });
+
+    socket?.on("messagesSeenByPeer", (peerId) {
+      chatsProvider.setChats(int.parse(peerId));
+    });
+
+    socket?.on("unreadCountUpdateAfterSeen", (data) {
+      chatsProvider.notSeenMessage(data['sender'], data['count']);
+    });
+
+    socket?.on("DeletedMsgId", (messageId) {
+      chatsProvider.chatAfterDelete(int.parse(messageId));
+    });
+  }
+
+  void unSubscribeToChat() {
+    final socket = socketService.socket;
+
+    socket?.off("messagesSeenByPeer");
+    socket?.off("newMessage");
+    socket?.off("unreadCountUpdateAfterSeen");
+    socket?.off("DeletedMsgId");
+  }
+
+  void emmitSeenStatus(Map<String, dynamic> data) {
+    socketService.socket?.emit("markMessagesAsSeen", data);
   }
 }

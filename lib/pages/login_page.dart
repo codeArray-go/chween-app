@@ -78,7 +78,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ElevatedButton(
                   onPressed: () {
                     ref.read(authProvider.notifier).login(emailController.text, passwordController.text);
-                    print("Token from login page: $getToken()");
                   },
                   style: ElevatedButton.styleFrom(
                     shadowColor: Colors.black,
