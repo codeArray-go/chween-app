@@ -1,6 +1,7 @@
 import 'package:chween_app/manager/socket_manager.dart';
 import 'package:chween_app/provider/auth_provider.dart';
 import 'package:chween_app/provider/chat_provider.dart';
+import 'package:chween_app/widgetComponents/chatSection/chat_bubble_paint.dart';
 import 'package:chween_app/widgetComponents/chatSection/chat_input_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -36,6 +37,7 @@ class Chats extends HookConsumerWidget {
     final authUserId = ref.watch(authProvider).user?['id'];
     final chatsProvider = ref.watch(chatProvider);
     final chatsNotifier = ref.read(chatProvider.notifier);
+    final isTyping = chatsProvider.typingUsers[chatsProvider.selectedUser?['id'].toString()];
 
     final userMessages = chatsProvider.chats.where((m) => m["sender_id"] == authUserId);
     final lastUserMsgId = userMessages.isNotEmpty ? userMessages.last['id'].toString() : null;
@@ -62,23 +64,29 @@ class Chats extends HookConsumerWidget {
 
                 final msgId = chat['id'].toString();
 
-                return GestureDetector(
-                  onLongPress: () => chatsNotifier.messageIdToDelete(int.parse(msgId)),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 3),
-                    padding: const EdgeInsets.symmetric(horizontal: 13),
-                    decoration: BoxDecoration(color: chatsProvider.messageSelected == int.parse(msgId) ? const Color.fromRGBO(255, 255, 255, 0.07) : Colors.transparent),
-                    child: _chatBubble(
-                      msgSeen: chat['is_seen'] == true,
-                      msgId: msgId,
-                      message: (chat['text'] ?? "") as String,
-                      isSender: isSender,
-                      imgUrl: chat['image'] as String?,
-                      time: messageCreatedTime,
-                      lastMessageSenderId: lastUserMsgId ?? "",
-                      isOptimisticMessage: chat['isOptimisticMessage'] == true,
+                return Column(
+                  children: [
+                    GestureDetector(
+                      onLongPress: () => chatsNotifier.messageIdToDelete(int.parse(msgId)),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 13),
+                        decoration: BoxDecoration(color: chatsProvider.messageSelected == int.parse(msgId) ? const Color.fromRGBO(255, 255, 255, 0.07) : Colors.transparent),
+
+                        child: _chatBubble(
+                          msgSeen: chat['is_seen'] == true,
+                          msgId: msgId,
+                          message: (chat['text'] ?? "") as String,
+                          isSender: isSender,
+                          imgUrl: chat['image'] as String?,
+                          time: messageCreatedTime,
+                          lastMessageSenderId: lastUserMsgId ?? "",
+                          isOptimisticMessage: chat['isOptimisticMessage'] == true,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (isTyping != null && lastUserMsgId == msgId) Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: _typingBubble(isSender: false)),
+                  ],
                 );
               },
             ),
@@ -100,63 +108,48 @@ Widget _chatBubble({
   required String lastMessageSenderId,
   required bool isOptimisticMessage,
 }) {
-  const borderRadiusCircular = Radius.circular(10);
   final isImage = imgUrl != null && imgUrl.isNotEmpty;
 
   return Align(
     alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
     child: Column(
-      crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isOptimisticMessage
-                ? 20
-                : isImage
-                ? 6
-                : 8,
-            vertical: 6,
-          ),
-          constraints: const BoxConstraints(maxWidth: 280),
-          decoration: BoxDecoration(
-            color: isSender ? const Color(0xFF1C2B4A) : const Color(0xFF333333),
-            borderRadius: BorderRadius.only(
-              topLeft: borderRadiusCircular,
-              topRight: borderRadiusCircular,
-              bottomLeft: isSender ? borderRadiusCircular : Radius.zero,
-              bottomRight: isSender ? Radius.zero : borderRadiusCircular,
+        CustomPaint(
+          painter: ChatBubblePaint(color: isSender ? const Color(0xFF1C2B4A) : const Color(0xFF333333), isSender: isSender),
+          child: Container(
+            padding: EdgeInsets.all(8),
+            constraints: const BoxConstraints(maxWidth: 280),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isImage) ...[
+                        ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.network(imgUrl)),
+                        const SizedBox(height: 4),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(time, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                        ),
+                      ],
+                      if (message.isNotEmpty) Text(message, style: const TextStyle(color: Colors.white, fontSize: 14)),
+                    ],
+                  ),
+                ),
+                if (!isImage)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text(time, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                  ),
+              ],
             ),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isImage) ...[
-                      ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.network(imgUrl)),
-                      const SizedBox(height: 4),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(time, style: const TextStyle(color: Colors.white54, fontSize: 10)),
-                      ),
-                    ],
-                    if (message.isNotEmpty) Text(message, style: const TextStyle(color: Colors.white, fontSize: 14)),
-                  ],
-                ),
-              ),
-              if (!isImage)
-                Padding(
-                  padding: EdgeInsets.only(left: 8),
-                  child: Text(time, style: const TextStyle(color: Colors.white54, fontSize: 10)),
-                ),
-            ],
-          ),
         ),
-
         if (lastMessageSenderId == msgId)
           Padding(
             padding: const EdgeInsets.only(top: 2, right: 4, left: 4),
@@ -170,6 +163,22 @@ Widget _chatBubble({
             ),
           ),
       ],
+    ),
+  );
+}
+
+Widget _typingBubble({required bool isSender}) {
+  return Align(
+    alignment: AlignmentGeometry.centerLeft,
+    child: CustomPaint(
+      painter: ChatBubblePaint(color: const Color(0xFF333333), isSender: isSender),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 18),
+        child: Text(
+          "•••",
+          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+      ),
     ),
   );
 }

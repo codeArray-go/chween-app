@@ -6,21 +6,25 @@ class SearchBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final border = OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.white12),
       borderRadius: BorderRadius.circular(50),
+      borderSide: BorderSide(color: Colors.white10),
     );
+
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: TextField(
-        cursorColor: Colors.white,
         decoration: InputDecoration(
-          hintText: 'Search inside your chat',
-          prefixIcon: Icon(Icons.search),
-          filled: true,
-          fillColor: Colors.white10,
-          isDense: true,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: BorderSide(color: Colors.white38),
+          ),
           enabledBorder: border,
-          focusedBorder: border,
+          hintText: 'Search in chat',
+          hintStyle: const TextStyle(color: Color.fromRGBO(90, 90, 90, 1)),
+          prefixIcon: const Icon(Icons.search, size: 25, color: Colors.grey),
+          filled: true,
+          fillColor: const Color.fromRGBO(7, 7, 7, 1.0),
+          isDense: true,
         ),
       ),
     );

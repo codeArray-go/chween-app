@@ -29,17 +29,18 @@ class _ChatInputBoxState extends ConsumerState<ChatInputBox> {
     final imagePicker = ImagePickerService();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: const Color(0xFF121212),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: const Color(0xFF333333)),
+                border: Border.all(color: const Color(0x1DFFFFFF)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -47,57 +48,49 @@ class _ChatInputBoxState extends ConsumerState<ChatInputBox> {
                 children: [
                   // IMAGE PREVIEW
                   if (selectedImage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () async {
-                              final img = await imagePicker.pickImageFromGallery();
-                              if (img != null) {
-                                setState(() {
-                                  selectedImage = img;
-                                });
-                              }
-                            },
-                            child: Container(
-                              height: 65,
-                              width: 65,
-                              decoration: BoxDecoration(color: const Color(0xFF2C2C2E), borderRadius: BorderRadius.circular(12)),
-                              child: const Icon(Icons.image_outlined, color: Colors.white, size: 30),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () async {
+                            final img = await imagePicker.pickImageFromGallery();
+                            if (img != null) {
+                              setState(() {
+                                selectedImage = img;
+                              });
+                            }
+                          },
+                          child: const Icon(Icons.image_outlined, color: Colors.white, size: 30),
+                        ),
+                        const SizedBox(width: 12),
 
-                          // Selected Image Preview
-                          Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.file(selectedImage!, height: 65, width: 65, fit: BoxFit.cover),
-                              ),
-                              // Remove button
-                              Positioned(
-                                top: -6,
-                                right: -6,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      selectedImage = null;
-                                    });
-                                  },
-                                  child: Container(
-                                    decoration: const BoxDecoration(color: Color(0xFF2C2C2E), shape: BoxShape.circle),
-                                    padding: const EdgeInsets.all(4),
-                                    child: const Icon(Icons.close, size: 14, color: Colors.white),
-                                  ),
+                        // Selected Image Preview
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(selectedImage!, height: 65, width: 65, fit: BoxFit.cover),
+                            ),
+                            // Remove button
+                            Positioned(
+                              top: -6,
+                              right: -6,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    selectedImage = null;
+                                  });
+                                },
+                                child: Container(
+                                  decoration: const BoxDecoration(color: Color(0xFF2C2C2E), shape: BoxShape.circle),
+                                  padding: const EdgeInsets.all(4),
+                                  child: const Icon(Icons.close, size: 14, color: Colors.white),
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
 
                   Row(
@@ -109,11 +102,11 @@ class _ChatInputBoxState extends ConsumerState<ChatInputBox> {
                           minLines: 1,
                           maxLines: 4,
                           keyboardType: TextInputType.multiline,
-                          style: const TextStyle(color: Colors.white, fontSize: 16),
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
                           decoration: const InputDecoration(
                             isDense: true,
                             hintText: 'Type your message...',
-                            hintStyle: TextStyle(color: Colors.white38, fontSize: 16),
+                            hintStyle: TextStyle(color: Colors.white38, fontSize: 14),
                             border: InputBorder.none,
                           ),
                         ),
@@ -129,10 +122,7 @@ class _ChatInputBoxState extends ConsumerState<ChatInputBox> {
                               });
                             }
                           },
-                          child: const Padding(
-                            padding: EdgeInsets.only(bottom: 2, left: 8),
-                            child: Icon(Icons.image_outlined, color: Colors.white54, size: 26),
-                          ),
+                          child: Icon(Icons.image_outlined, color: Colors.white54, size: 30),
                         ),
                     ],
                   ),
@@ -141,22 +131,20 @@ class _ChatInputBoxState extends ConsumerState<ChatInputBox> {
             ),
           ),
 
-          const SizedBox(width: 10),
+          const SizedBox(width: 7),
 
           // SEND BUTTON
           GestureDetector(
             onTap: () {
               if (textMessageController.text.trim().isEmpty && selectedImage == null) return;
-
               sendMessage.sendMessage(selectedUserId, textMessageController.text, selectedImage?.path ?? "");
-
               textMessageController.clear();
               setState(() {
                 selectedImage = null;
               });
             },
             child: Container(
-              margin: const EdgeInsets.only(bottom: 6),
+              margin: const EdgeInsets.only(bottom: 10),
               child: const Icon(Icons.check_circle_outlined, size: 42, color: Color(0xDBFFFFFF)),
             ),
           ),

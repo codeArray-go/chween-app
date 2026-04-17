@@ -13,8 +13,18 @@ class ChatProviderState {
   final int? messageSelected;
   final List<dynamic> notificationCount;
   final List<dynamic> onlineUsers;
+  final Map<String, dynamic> typingUsers;
 
-  ChatProviderState({this.selectedUser, this.chats = const [], this.error, this.isLoading = false, this.messageSelected, this.notificationCount = const [], this.onlineUsers = const []});
+  ChatProviderState({
+    this.selectedUser,
+    this.chats = const [],
+    this.error,
+    this.isLoading = false,
+    this.messageSelected,
+    this.notificationCount = const [],
+    this.onlineUsers = const [],
+    this.typingUsers = const {},
+  });
 
   ChatProviderState copyWith({
     bool? isLoading,
@@ -24,6 +34,7 @@ class ChatProviderState {
     int? messageSelected,
     List<dynamic>? notificationCount,
     List<dynamic>? onlineUsers,
+    Map<String, dynamic>? typingUsers,
   }) {
     return ChatProviderState(
       isLoading: isLoading ?? this.isLoading,
@@ -33,6 +44,7 @@ class ChatProviderState {
       messageSelected: messageSelected ?? this.messageSelected,
       notificationCount: notificationCount ?? this.notificationCount,
       onlineUsers: onlineUsers ?? this.onlineUsers,
+      typingUsers: typingUsers ?? this.typingUsers,
     );
   }
 
@@ -130,6 +142,19 @@ class ChatNotifier extends StateNotifier<ChatProviderState> {
     state = state.copyWith(chats: [...state.chats, message]);
   }
 
+  // TYPING ON
+  void initTypingListener(String senderId) {
+    state = state.copyWith(typingUsers: {...state.typingUsers, senderId: true});
+  }
+
+  // STOP TYPING
+  void stopTypingListener(String senderId) {
+    final update = Map<String, dynamic>.from(state.typingUsers);
+
+    update.remove(senderId);
+    state = state.copyWith(typingUsers: update);
+  }
+
   // UPDATE MESSAGE SEEN STATUS
   void setChats(int id) {
     final message = state.chats;
@@ -197,7 +222,7 @@ class ChatNotifier extends StateNotifier<ChatProviderState> {
   // DELETE MESSAGE
   Future<void> deleteMessage(int id) async {
     try {
-      await chatService.deleteMessage(id);
+      await chatService.deleteMessage(id.toString());
       final message = state.chats;
 
       final updatedMessage = message.where((msg) => int.parse(msg["id"]) != id).toList();
