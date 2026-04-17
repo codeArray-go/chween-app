@@ -1,7 +1,7 @@
 import 'package:chween_app/lib/flutter_secure_storage.dart';
 import 'package:chween_app/manager/socket_manager.dart';
+import 'package:chween_app/navigator_page.dart';
 import 'package:chween_app/pages/login_page.dart';
-import 'package:chween_app/pages/side_bar_page.dart';
 import 'package:chween_app/provider/auth_provider.dart';
 import 'package:chween_app/provider/chat_provider.dart';
 import 'package:chween_app/widgetComponents/skeletons/side_bar_skeleton.dart';
@@ -35,16 +35,22 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+    debugPrint("THIS IS FROM AUTH WRAPPER: ${auth.user}");
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.user != null && previous?.user == null) {
         _connectSocket();
       }
+
+      if (next.user == null && previous?.user != null) {
+        debugPrint("Logging out: Disconnecting socket from Wrapper");
+        ref.read(socketManagerProvider).disconnect();
+      }
     });
 
     if (auth.isLoading) return const SideBarSkeleton();
 
-    if (auth.user != null) return SideBarPage();
-    return LoginPage();
+    if (auth.user != null) return NavigatorPage(key: UniqueKey());
+    return LoginPage(key: UniqueKey());
   }
 }

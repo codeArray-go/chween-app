@@ -23,9 +23,12 @@ class SocketManager {
     });
 
     socketService.socket?.onReconnect((_) {
-      print("RECONNECTED");
       _registerEvents();
     });
+  }
+
+  void disconnect() {
+    socketService.disconnect();
   }
 
   void _registerEvents() {
@@ -35,6 +38,8 @@ class SocketManager {
 
     socket?.off("getOnlineUsers");
     socket?.off("unreadCount");
+    socket?.off("typing");
+    socket?.off("stopTyping");
 
     socket?.on("getOnlineUsers", (data) {
       chatsProvider.getOnlineUsers(data);
@@ -42,6 +47,14 @@ class SocketManager {
 
     socket?.on("unreadCount", (data) {
       chatsProvider.notSeenMessage(int.parse(data['sender']), data['count']);
+    });
+
+    socket?.on("typing", (senderId) {
+      chatsProvider.initTypingListener(senderId);
+    });
+
+    socket?.on("stopTyping", (senderId) {
+      chatsProvider.stopTypingListener(senderId);
     });
   }
 

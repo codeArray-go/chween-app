@@ -44,7 +44,7 @@ class ChatService {
     }
   }
 
-  Future<void> deleteMessage(int id) async {
+  Future<void> deleteMessage(String id) async {
     await FetchUrl.post("/messages/delete", body: {"message_id": id});
   }
 }

@@ -1,7 +1,6 @@
-import 'package:chween_app/lib/flutter_secure_storage.dart';
+import 'package:chween_app/pages/signup_page.dart';
 import 'package:chween_app/provider/auth_provider.dart';
 import 'package:chween_app/widgetComponents/input_box.dart';
-import 'package:chween_app/widgetComponents/orbit_dot_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -88,7 +87,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     minimumSize: Size(270, 40),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
-                  child: authState.isLoading ? OrbitDotLoader() : Text("Submit", style: TextStyle(color: Colors.black)),
+                  child: authState.isLoading ? Text("loading...", style: TextStyle(color: Colors.black)) : Text("Submit", style: TextStyle(color: Colors.black)),
                 ),
 
                 //   Login Option
@@ -97,7 +96,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   children: [
                     const Text('Don\'t have account ?'),
                     TextButton(
-                      onPressed: () {},
+                      // onPressed: () {},
+                      onPressed: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return SignupPage();
+                            },
+                          ),
+                        );
+                      },
                       child: const Text('Create one', style: TextStyle(color: Colors.blue)),
                     ),
                   ],

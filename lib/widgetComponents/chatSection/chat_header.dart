@@ -24,6 +24,7 @@ class _ProfileHeaderState extends ConsumerState<ChatHeader> {
     final chatsNotifier = ref.read(chatProvider.notifier);
     final userDetail = chatsProvider.selectedUser;
     final socketOnlineIds = chatsProvider.onlineUsers;
+    final isTyping = chatsProvider.typingUsers[userDetail?['id'].toString()];
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 20),
@@ -40,7 +41,14 @@ class _ProfileHeaderState extends ConsumerState<ChatHeader> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(userDetail['full_name'], style: TextStyle(fontSize: 16)),
-                        Text(socketOnlineIds.map((id) => id.toString()).contains(userDetail['id'].toString()) ? 'online' : 'offline', style: TextStyle(fontSize: 11)),
+                        Text(
+                          socketOnlineIds.map((id) => id.toString()).contains(userDetail['id'].toString())
+                              ? isTyping != null && isTyping
+                                    ? 'typing...'
+                                    : 'online'
+                              : 'offline',
+                          style: TextStyle(fontSize: 11),
+                        ),
                       ],
                     ),
 

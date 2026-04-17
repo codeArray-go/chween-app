@@ -9,21 +9,21 @@ class SideBarPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ProfileHeader(),
-          Container(
-            decoration: BoxDecoration(
-              border: BoxBorder.symmetric(horizontal: BorderSide(color: Color.fromRGBO(255, 255, 255, 0.05))),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ProfileHeader(),
+            SizedBox(height: 15),
+            SearchBox(),
+            SizedBox(height: 20),
+            Expanded(
+              child: UserList(),
             ),
-          ),
-          SizedBox(height: 20),
-          SearchBox(),
-          SizedBox(height: 30),
-          Expanded(child: UserList()),
-        ],
+          ],
+        ),
       ),
     );
   }
