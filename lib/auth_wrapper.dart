@@ -4,7 +4,6 @@ import 'package:chween_app/navigator_page.dart';
 import 'package:chween_app/pages/login_page.dart';
 import 'package:chween_app/provider/auth_provider.dart';
 import 'package:chween_app/provider/chat_provider.dart';
-import 'package:chween_app/widgetComponents/skeletons/side_bar_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -35,7 +34,6 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
-    debugPrint("THIS IS FROM AUTH WRAPPER: ${auth.user}");
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.user != null && previous?.user == null) {
@@ -48,7 +46,7 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
       }
     });
 
-    if (auth.isLoading) return const SideBarSkeleton();
+    if (auth.isLoading) return Center(child: CircularProgressIndicator.adaptive());
 
     if (auth.user != null) return NavigatorPage(key: UniqueKey());
     return LoginPage(key: UniqueKey());

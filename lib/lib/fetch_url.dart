@@ -3,7 +3,7 @@ import 'package:chween_app/lib/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class FetchUrl {
-  static const String baseUrl = "https://chween-web.onrender.com/api";
+  static const String baseUrl = "http://192.168.1.39:3000/api";
 
   static Future<Map<String, String>> getHeaders() async {
     final token = await getToken();

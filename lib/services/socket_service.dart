@@ -1,7 +1,7 @@
 import 'package:socket_io_client_flutter/socket_io_client_flutter.dart' as i_o;
 
 class SocketService {
-  final baseUrl = 'https://chween-web.onrender.com';
+  final baseUrl = 'http://192.168.1.39:3000';
   i_o.Socket? socket;
 
   void connect(String token) {

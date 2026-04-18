@@ -13,56 +13,46 @@ class UserList extends ConsumerWidget {
     final partners = users.partners ?? [];
     final chatsProvider = ref.watch(chatProvider);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Chunyal', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          SizedBox(height: 10),
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(vertical: 0),
-              scrollDirection: Axis.vertical,
-              itemCount: partners.length,
-              itemBuilder: (context, index) {
-                final user = partners[index];
-                final notifications = chatsProvider.notificationCount;
-                final onlineUserId = chatsProvider.onlineUsers.firstWhere((onlineUserId) => onlineUserId.contains(user['id']), orElse: () => "0");
+    return Expanded(
+      child: ListView.builder(
+        padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
+        scrollDirection: Axis.vertical,
+        itemCount: partners.length,
+        itemBuilder: (context, index) {
+          final user = partners[index];
+          final notifications = chatsProvider.notificationCount;
+          final onlineUserId = chatsProvider.onlineUsers.firstWhere((onlineUserId) => onlineUserId.contains(user['id']), orElse: () => "0");
 
-                final notification = notifications.firstWhere((n) => n['sender_id'].toString() == user['id'], orElse: () => null);
-                final isTyping = chatsProvider.typingUsers[user['id'].toString()];
+          final notification = notifications.firstWhere((n) => n['sender_id'].toString() == user['id'], orElse: () => null);
+          final isTyping = chatsProvider.typingUsers[user['id'].toString()];
 
-                return GestureDetector(
-                  onTap: () async {
-                    final chatNotifier = ref.read(chatProvider.notifier);
-                    final id = int.parse(user['id']);
+          return GestureDetector(
+            onTap: () async {
+              final chatNotifier = ref.read(chatProvider.notifier);
+              final id = int.parse(user['id']);
 
-                    chatNotifier.setSelectedUser(id, user['full_name'], user['profile_pic']);
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return ChatContainer();
-                        },
-                      ),
-                    );
-
-                    chatNotifier.clearSelectedUser();
+              chatNotifier.setSelectedUser(id, user['full_name'], user['profile_pic']);
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) {
+                    return ChatContainer();
                   },
-                  child: _user(
-                    imgSrc: user['profile_pic'] as String,
-                    name: user['full_name'] as String,
-                    lastMsg: user['text'] as String,
-                    senderAsMe: user['is_me'] as bool,
-                    notificationCount: notification?['unread_count'],
-                    isOnline: (int.parse(onlineUserId) > 0) ? true : false,
-                    isTyping: (isTyping != null) ? isTyping : false,
-                  ),
-                );
-              },
+                ),
+              );
+
+              chatNotifier.clearSelectedUser();
+            },
+            child: _user(
+              imgSrc: user['profile_pic'] as String,
+              name: user['full_name'] as String,
+              lastMsg: user['text'] as String,
+              senderAsMe: user['is_me'] as bool,
+              notificationCount: notification?['unread_count'],
+              isOnline: (int.parse(onlineUserId) > 0) ? true : false,
+              isTyping: (isTyping != null) ? isTyping : false,
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -104,10 +94,10 @@ Widget _user({required String imgSrc, required String name, required String last
                     spacing: 3,
                     children: [
                       Text(
-                        senderAsMe ? 'sent: ' : 'received:',
+                        senderAsMe ? 'sent: ' : '',
                         style: TextStyle(fontSize: 13, color: Colors.white38, fontWeight: FontWeight.w600),
                       ),
-                      Text(lstMsg.length <= 3 ? lastMsg : "${lstMsg.take(3).join(' ')}...", style: TextStyle(fontSize: 13, color: Colors.white54)),
+                      Text(lstMsg.length <= 3 ? lastMsg : "${lstMsg.take(3).join(' ')}...", style: TextStyle(fontSize: 13, color: Colors.white38)),
                     ],
                   ),
           ],

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:chween_app/manager/socket_manager.dart';
 import 'package:chween_app/provider/auth_provider.dart';
 import 'package:chween_app/provider/chat_provider.dart';
@@ -130,7 +132,7 @@ Widget _chatBubble({
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (isImage) ...[
-                        ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.network(imgUrl)),
+                        ClipRRect(borderRadius: BorderRadius.circular(8), child: isOptimisticMessage ? Image.file(File(imgUrl)) : Image.network(imgUrl)),
                         const SizedBox(height: 4),
                         Align(
                           alignment: Alignment.centerRight,
