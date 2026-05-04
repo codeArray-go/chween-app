@@ -2,8 +2,7 @@
 
 A full-stack real-time chat application built with modern web technologies. This project enables users to communicate instantly with features like live messaging, unread message tracking, and real-time updates using WebSockets.
 
-<img width="825" height="1024" alt="image" src="https://github.com/user-attachments/assets/6a8c97a6-7b90-43d3-aebd-30ed8517786e" />
-
+<img width="1772" height="1794" alt="Gemini_Generated_Image_x09ahox09ahox09a" src="https://github.com/user-attachments/assets/424b715f-18cd-49fd-8a52-2c84e0e47201" />
 
 ## 🚀 Project Overview
 
