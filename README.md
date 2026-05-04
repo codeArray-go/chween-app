@@ -2,6 +2,9 @@
 
 A full-stack real-time chat application built with modern web technologies. This project enables users to communicate instantly with features like live messaging, unread message tracking, and real-time updates using WebSockets.
 
+<img width="825" height="1024" alt="image" src="https://github.com/user-attachments/assets/6a8c97a6-7b90-43d3-aebd-30ed8517786e" />
+
+
 ## 🚀 Project Overview
 
 This chat application provides:
