@@ -4,7 +4,7 @@ A full-stack real-time chat application built with modern web technologies. This
 
 <img width="1772" height="1794" alt="Gemini_Generated_Image_x09ahox09ahox09a" src="https://github.com/user-attachments/assets/424b715f-18cd-49fd-8a52-2c84e0e47201" />
 
-## 🚀 Project Overview
+## Project Overview
 
 This chat application provides:
 
@@ -29,16 +29,16 @@ Handles:
 - 
 ---
 
-## ⚙️ Core Features
+## Core Features
 
-- 🔴 **Real-time messaging using WebSockets**
-- 👁️ **Seen / unseen message tracking**
-- 🔔 **Unread notification counts per user**
-- 🌐 **Deployment-ready full-stack structure**
+- **Real-time messaging using WebSockets**
+- **Seen / unseen message tracking**
+- **Unread notification counts per user**
+- **Deployment-ready full-stack structure**
 
 ---
 
-## 🛠️ Tech Stack (High Level)
+## Tech Stack (High Level)
 
 - Flutter,
 - State management (Riverpod),
@@ -47,7 +47,7 @@ Handles:
 
 ---
 
-## 📌 Purpose of the Project
+## Purpose of the Project
 
 This project was built as a **learning-driven production-style application** to:
 
